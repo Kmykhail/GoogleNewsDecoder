@@ -1,6 +1,7 @@
 package com.kote.gnewsdecoder
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -26,7 +27,7 @@ class GoogleNewsDecoder {
     private val batchUrl = "https://news.google.com/_/DotsSplashUi/data/batchexecute"
     private val jsonMediaType = "application/x-www-form-urlencoded;charset=UTF-8".toMediaType()
 
-    suspend fun decodeGoogleNewsUrl(link: String) : Map<String, Any> {
+    suspend fun decodeGoogleNewsUrl(link: String, interval: Int = 0) : Map<String, Any> {
         val base64Str = getBase64(link) ?: return errorResponse("Invalid Google News URL format")
 
         val decodingParams = getDecodingParams(base64Str)
@@ -35,7 +36,13 @@ class GoogleNewsDecoder {
         }
 
         val params = decodingParams["decodingParams"] as? DecodingParams ?: return errorResponse("Invalid parameters format")
-        return decodeUrl(params)
+        val decodedUrlResponse = decodeUrl(params)
+
+        if (interval > 0) {
+            delay(interval * 1000L)
+        }
+
+        return decodedUrlResponse
     }
 
     private fun errorResponse(message: String) : Map<String, Any> {
@@ -159,7 +166,7 @@ class GoogleNewsDecoder {
 //    val googleNewsLink = "https://news.google.com/rss/articles/CBMiX0FVX3lxTFAyWFBUVGdDNG14bDJRRk1jZlBjRE5ZRDJoMF9HYVZReVZZbkV4bElkU21NWnNwek0wRE9FVFZaeV9jWUtvaVFXdVIxSk5odEVUeS1fRUhYRzZKQ09fZHFn0gFrQVVfeXFMTXM2NXY0bE5hZVV3eWdUZG1NSUw3N004V0ZXZVVzZU5uel9qdUtNYXJoeF9icGVkd3JkVHAtRHE2ZVBOLXZ4RlBJLVhmVWE4dlliMjBra25NT0pKeHg3RlUxSU5WZ1Vsc3FuMjg?oc=5"
 //    val decoder = GoogleNewsDecoder()
 //
-//    val response = decoder.decodeGoogleNewsUrl(googleNewsLink)
+//    var response = decoder.decodeGoogleNewsUrl(googleNewsLink, 2)
 //    when(response["status"]) {
 //        true -> {
 //            val url = response["decodedUrl"] as? String
