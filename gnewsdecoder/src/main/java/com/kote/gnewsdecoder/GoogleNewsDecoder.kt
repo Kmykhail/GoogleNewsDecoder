@@ -1,4 +1,4 @@
-package com.kote.googlenewsdecoder
+package com.kote.gnewsdecoder
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -147,27 +147,27 @@ class GoogleNewsDecoder {
     }
 }
 
-//fun main() {
-//    println("=== Running Library Test ===")
-//    val googleNewsLink = "https://news.google.com/rss/articles/CBMiX0FVX3lxTFAyWFBUVGdDNG14bDJRRk1jZlBjRE5ZRDJoMF9HYVZReVZZbkV4bElkU21NWnNwek0wRE9FVFZaeV9jWUtvaVFXdVIxSk5odEVUeS1fRUhYRzZKQ09fZHFn0gFrQVVfeXFMTXM2NXY0bE5hZVV3eWdUZG1NSUw3N004V0ZXZVVzZU5uel9qdUtNYXJoeF9icGVkd3JkVHAtRHE2ZVBOLXZ4RlBJLVhmVWE4dlliMjBra25NT0pKeHg3RlUxSU5WZ1Vsc3FuMjg?oc=5"
-//    val decoder = GoogleNewsDecoder()
-//    val response = decoder.decodeGoogleNewsUrl(googleNewsLink)
-//    when(response["status"]) {
-//        true -> {
-//            val url = response["decodedUrl"] as? String
-//            url?.let {
-//                println("Decoded URL: $url")
-//            } ?: {
-//                println("Error: Invalid URL format in response: $response")
-//            }
-//        }
-//        false -> {
-//            val message = response["message"] as? String ?: "Unknown error"
-//            println("Error: $message")
-//        }
-//        else -> {
-//            println("Error: Invalid response format: $response")
-//        }
-//    }
-//    println("=== End Library Test ===")
-//}
+fun main() {
+    println("=== Running Library Test ===")
+    val googleNewsLink = "https://news.google.com/rss/articles/CBMiX0FVX3lxTFAyWFBUVGdDNG14bDJRRk1jZlBjRE5ZRDJoMF9HYVZReVZZbkV4bElkU21NWnNwek0wRE9FVFZaeV9jWUtvaVFXdVIxSk5odEVUeS1fRUhYRzZKQ09fZHFn0gFrQVVfeXFMTXM2NXY0bE5hZVV3eWdUZG1NSUw3N004V0ZXZVVzZU5uel9qdUtNYXJoeF9icGVkd3JkVHAtRHE2ZVBOLXZ4RlBJLVhmVWE4dlliMjBra25NT0pKeHg3RlUxSU5WZ1Vsc3FuMjg?oc=5"
+    val decoder = GoogleNewsDecoder()
+    val response = decoder.decodeGoogleNewsUrl(googleNewsLink)
+    when(response["status"]) {
+        true -> {
+            val url = response["decodedUrl"] as? String
+            url?.let {
+                println("Decoded URL: $url")
+            } ?: {
+                println("Error: Invalid URL format in response: $response")
+            }
+        }
+        false -> {
+            val message = response["message"] as? String ?: "Unknown error"
+            println("Error: $message")
+        }
+        else -> {
+            println("Error: Invalid response format: $response")
+        }
+    }
+    println("=== End Library Test ===")
+}
