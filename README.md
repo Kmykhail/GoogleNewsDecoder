@@ -57,6 +57,7 @@ lifecycleScope.launch {
 }
 ```
 The function decodeGoogleNewsUrl(...) returns a Map<String, Any> with:
+
  status: Boolean - indicates success
 
  decodedUrl: String - the original article URL
