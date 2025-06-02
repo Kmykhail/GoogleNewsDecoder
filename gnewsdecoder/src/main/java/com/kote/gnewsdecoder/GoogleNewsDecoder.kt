@@ -175,32 +175,32 @@ class GoogleNewsDecoder(
     }
 }
 
-fun mainSingleRequest() = runBlocking {
-    println("=== Single Request Example ===")
-    val googleNewsLink = "https://news.google.com/rss/articles/CBMiygFBVV95cUxOQlZDcndJLW4zUGxxeGVkc0NfYzJacEVNSlZaWG1WN1J1Y0JsSm50QmlROUw4eUpFNFQyRzkzTkZ0WVd0ZXdzUU50bDZmTDBPbW9iSTJxSUcxTWdOWkd0UTU2aWpiUzBkZ2hGcHhGLWY4Q2YzTC1rWk50eEZYZFlCY29NUlhndm9nZnFyME5jc1JmeWZEbUJJZHVJWFRQSUZDWkZRZy1tQ0FDTXRaNGZGeUJEeUR5VWZrY2ZxYmhNSmhlajZ5a0RodWlR0gHgAUFVX3lxTE9FZ2I4bXdmdGRpTmxEaF8tUUZRaWVSNW5oZHZDa0xZd3RndUV1MmhPLXJucnB0VXZOdDdjWkRLc3EyUXRDalRIdEExekRuZG5od2tJdFhPRHVVTFg3Y3BfdDZYNDl0Z0hLcXExZWJGc0xiN3FSV1Y5ZWZCWEZmc1NERHJCVzUwR1ZNQkVHbEcxeldhZVBpaWpHREE0RXEwS2xVR3AtNVN1ZXZNeGNXZjgyaG5qejhoancyTElCOWR5SnNFOEhRV3pUQnptVE1qX3VGTWlvQ2s4c2hldkIzVVRn?oc=5"
-    val decoder = GoogleNewsDecoder()
-
-    val interval = 1500L
-    val response = decoder.decodeGoogleNewsUrl(googleNewsLink, interval)
-    when (response["status"]) {
-        true -> {
-            val decodedUrl = response["decodedUrl"] as? String
-            if (decodedUrl != null) {
-                println("Decoded URL: $decodedUrl")
-            } else {
-                println("Error: Invalid URL format in response: $response")
-            }
-        }
-        false -> {
-            val message = response["message"] as? String ?: "Unknown error"
-            println("Error: $message")
-        }
-        else -> {
-            println("Error: Invalid response format: $response")
-        }
-    }
-    println("=== End of Single Request ===")
-}
+//fun mainSingleRequest() = runBlocking {
+//    println("=== Single Request Example ===")
+//    val googleNewsLink = "https://news.google.com/rss/articles/CBMiygFBVV95cUxOQlZDcndJLW4zUGxxeGVkc0NfYzJacEVNSlZaWG1WN1J1Y0JsSm50QmlROUw4eUpFNFQyRzkzTkZ0WVd0ZXdzUU50bDZmTDBPbW9iSTJxSUcxTWdOWkd0UTU2aWpiUzBkZ2hGcHhGLWY4Q2YzTC1rWk50eEZYZFlCY29NUlhndm9nZnFyME5jc1JmeWZEbUJJZHVJWFRQSUZDWkZRZy1tQ0FDTXRaNGZGeUJEeUR5VWZrY2ZxYmhNSmhlajZ5a0RodWlR0gHgAUFVX3lxTE9FZ2I4bXdmdGRpTmxEaF8tUUZRaWVSNW5oZHZDa0xZd3RndUV1MmhPLXJucnB0VXZOdDdjWkRLc3EyUXRDalRIdEExekRuZG5od2tJdFhPRHVVTFg3Y3BfdDZYNDl0Z0hLcXExZWJGc0xiN3FSV1Y5ZWZCWEZmc1NERHJCVzUwR1ZNQkVHbEcxeldhZVBpaWpHREE0RXEwS2xVR3AtNVN1ZXZNeGNXZjgyaG5qejhoancyTElCOWR5SnNFOEhRV3pUQnptVE1qX3VGTWlvQ2s4c2hldkIzVVRn?oc=5"
+//    val decoder = GoogleNewsDecoder()
+//
+//    val interval = 1500L
+//    val response = decoder.decodeGoogleNewsUrl(googleNewsLink, interval)
+//    when (response["status"]) {
+//        true -> {
+//            val decodedUrl = response["decodedUrl"] as? String
+//            if (decodedUrl != null) {
+//                println("Decoded URL: $decodedUrl")
+//            } else {
+//                println("Error: Invalid URL format in response: $response")
+//            }
+//        }
+//        false -> {
+//            val message = response["message"] as? String ?: "Unknown error"
+//            println("Error: $message")
+//        }
+//        else -> {
+//            println("Error: Invalid response format: $response")
+//        }
+//    }
+//    println("=== End of Single Request ===")
+//}
 
 //fun mainMultipleRequests() = runBlocking {
 //    println("=== Multiple Requests Example ===")
