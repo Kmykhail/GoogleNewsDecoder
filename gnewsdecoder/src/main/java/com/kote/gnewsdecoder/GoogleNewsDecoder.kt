@@ -13,6 +13,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import java.net.InetSocketAddress
+import java.net.Proxy
 import java.net.URL
 import java.net.URLEncoder
 
@@ -22,12 +25,23 @@ data class DecodingParams(
     val base64Str: String
 )
 
-class GoogleNewsDecoder {
-    private val client: OkHttpClient = OkHttpClient()
+class GoogleNewsDecoder(
+    proxyHost: String? = null,
+    proxyPort: Int? = null
+) {
+    private var client : OkHttpClient = if (proxyHost != null && proxyPort != null) {
+        val proxy = Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort))
+        OkHttpClient.Builder()
+            .proxy(proxy)
+            .build()
+    } else {
+        OkHttpClient()
+    }
+
     private val batchUrl = "https://news.google.com/_/DotsSplashUi/data/batchexecute"
     private val jsonMediaType = "application/x-www-form-urlencoded;charset=UTF-8".toMediaType()
 
-    suspend fun decodeGoogleNewsUrl(link: String, interval: Int = 0) : Map<String, Any> {
+    suspend fun decodeGoogleNewsUrl(link: String, intervalMilli: Long = 0) : Map<String, Any> {
         val base64Str = getBase64(link) ?: return errorResponse("Invalid Google News URL format")
 
         val decodingParams = getDecodingParams(base64Str)
@@ -38,8 +52,8 @@ class GoogleNewsDecoder {
         val params = decodingParams["decodingParams"] as? DecodingParams ?: return errorResponse("Invalid parameters format")
         val decodedUrlResponse = decodeUrl(params)
 
-        if (interval > 0) {
-            delay(interval * 1000L)
+        if (intervalMilli > 0) {
+            delay(intervalMilli)
         }
 
         return decodedUrlResponse
@@ -161,28 +175,83 @@ class GoogleNewsDecoder {
     }
 }
 
-//fun main() = runBlocking {
-//    println("=== Running Library Test ===")
-//    val googleNewsLink = "https://news.google.com/rss/articles/CBMiX0FVX3lxTFAyWFBUVGdDNG14bDJRRk1jZlBjRE5ZRDJoMF9HYVZReVZZbkV4bElkU21NWnNwek0wRE9FVFZaeV9jWUtvaVFXdVIxSk5odEVUeS1fRUhYRzZKQ09fZHFn0gFrQVVfeXFMTXM2NXY0bE5hZVV3eWdUZG1NSUw3N004V0ZXZVVzZU5uel9qdUtNYXJoeF9icGVkd3JkVHAtRHE2ZVBOLXZ4RlBJLVhmVWE4dlliMjBra25NT0pKeHg3RlUxSU5WZ1Vsc3FuMjg?oc=5"
+fun mainSingleRequest() = runBlocking {
+    println("=== Single Request Example ===")
+    val googleNewsLink = "https://news.google.com/rss/articles/CBMiygFBVV95cUxOQlZDcndJLW4zUGxxeGVkc0NfYzJacEVNSlZaWG1WN1J1Y0JsSm50QmlROUw4eUpFNFQyRzkzTkZ0WVd0ZXdzUU50bDZmTDBPbW9iSTJxSUcxTWdOWkd0UTU2aWpiUzBkZ2hGcHhGLWY4Q2YzTC1rWk50eEZYZFlCY29NUlhndm9nZnFyME5jc1JmeWZEbUJJZHVJWFRQSUZDWkZRZy1tQ0FDTXRaNGZGeUJEeUR5VWZrY2ZxYmhNSmhlajZ5a0RodWlR0gHgAUFVX3lxTE9FZ2I4bXdmdGRpTmxEaF8tUUZRaWVSNW5oZHZDa0xZd3RndUV1MmhPLXJucnB0VXZOdDdjWkRLc3EyUXRDalRIdEExekRuZG5od2tJdFhPRHVVTFg3Y3BfdDZYNDl0Z0hLcXExZWJGc0xiN3FSV1Y5ZWZCWEZmc1NERHJCVzUwR1ZNQkVHbEcxeldhZVBpaWpHREE0RXEwS2xVR3AtNVN1ZXZNeGNXZjgyaG5qejhoancyTElCOWR5SnNFOEhRV3pUQnptVE1qX3VGTWlvQ2s4c2hldkIzVVRn?oc=5"
+    val decoder = GoogleNewsDecoder()
+
+    val interval = 1500L
+    val response = decoder.decodeGoogleNewsUrl(googleNewsLink, interval)
+    when (response["status"]) {
+        true -> {
+            val decodedUrl = response["decodedUrl"] as? String
+            if (decodedUrl != null) {
+                println("Decoded URL: $decodedUrl")
+            } else {
+                println("Error: Invalid URL format in response: $response")
+            }
+        }
+        false -> {
+            val message = response["message"] as? String ?: "Unknown error"
+            println("Error: $message")
+        }
+        else -> {
+            println("Error: Invalid response format: $response")
+        }
+    }
+    println("=== End of Single Request ===")
+}
+
+//fun mainMultipleRequests() = runBlocking {
+//    println("=== Multiple Requests Example ===")
 //    val decoder = GoogleNewsDecoder()
 //
-//    var response = decoder.decodeGoogleNewsUrl(googleNewsLink, 2)
-//    when(response["status"]) {
-//        true -> {
-//            val url = response["decodedUrl"] as? String
-//            url?.let {
-//                println("Decoded URL: $url")
-//            } ?: {
-//                println("Error: Invalid URL format in response: $response")
+//    val intervals = listOf(500L, 1000L, 1500L)
+//    val rssUrls = listOf(
+//        "https://news.google.com/rss/articles/CBMiXkFVX3lxTE1qRWRxaFBYVFJvX0pMMWpWOThkVDVSS1cwZ0Q4Tl96VkZIdFBTUnlTMHd4bkF3eDRhRGtFMkhaa2hfbzE3UU5Ba0ZxdTYxWGJpeGhoNFpQRDNkbFdaNGc?oc=5",
+//        "https://news.google.com/rss/articles/CBMikgFBVV95cUxPUEhtMHJFOU5YZ2YxaDB6RHVBdFh5VVZYdko5MU5GSkRmZExVV2RGRTBaamVSMFIxZFR1S1ZJeTJaZUYwaVYyendHV2d2dVdpbGhNcWlndWpZMzhpRDJXUnh2RVREeVI5RW0zdXd6N1drc2FLNnVpdnktajZ4R1phLUFmNTJ3WXZtTGpRWTZRZ0tIQQ?oc=5",
+//        "https://news.google.com/rss/articles/CBMinwFBVV95cUxPOUpJRVpfUVd0ZDNKY21qUWJ4bUdPNWdJQ3RxQ293a0VaUVppY2huZzlka2pGTDNXWVVLRng4SEJ1RktjU2xWa3VZb1g2bTR3cGtMRWRnYnNjZWxXYUZkNlVOdTRfLVdMYlVzR1VrdEdjTHdfOHozb0VXRGw1dFk5S052U3p0TDZ3MmYzVF9lcm1ldVMwWHpwZG16UnRNMnM?oc=5",
+//        "https://news.google.com/rss/articles/CBMiqwFBVV95cUxQejdSeGtyZGdEQnN5b2tlVm9rUlhCdGMyQTM4a1o3LWJYMnB1MlJnT3Itb29DMVpOd3hrdjRfUThvR3F0c19fNzgxZ2kzVlU1VnJRbHh4M1BWeWxlOUNrYWhSaFItY1dKak81UDdDdEhPMFAzTl9BOWtvdzNTdExKYlVsQzNjaTFxT2YyV09vYkIxbzFPcmRnRy1ieER3N0k4UG9sdUtVY0lEWlXSAbABQVVfeXFMUEUyVm45TXA0TkthemRHYmd4bjVGSVF4b2E5TFd1NVktcDlBV09lRzZPV1k4cnVxQUZYUVV0d0k0SnRrbHlRelJVVGRfczhTVFBYMWthSGRyQjZ1NmMyM1YxVDhHRDFtanlmNElYTkZ1NUxPRU1PblZtMmNzSWxqY0FIMUdUU0tLTFpqWUUxNnUxTHRYUG4xd2F5emdia1pKMVJ0b1BzN0xOdm80N0lUNXM?oc=5",
+//        "https://news.google.com/rss/articles/CBMiywFBVV95cUxQUzlSdUh1U3c1NmFrN0NFeDltekVoNjd5U0ZzaFhnemhsQVNfaTh6NmdhUEpUOGFxTGc3bzZiSldRTGJta1BsNkUtX1dERE5YMnJ5a2xNeURrX1B0dTJUUGoyWWExY2dPUjVvNEljbDJwa3dMUExEUHNYaTd3bGJRUWRWSHJjSkhHV2ROYUdKR0xEVVdPcUJRUzVaRUxfWVhiajBGeEM2QXZEbGQ4YjJZNk43WVV2YW85ZmdWbm01STcySEdCR1N2TnJSVdIBggJBVV95cUxPUkRldmVwVThWcVFEbGJHeUw2c2pVRTIzQlRLT3RyRldQSkxOR2NWb0RFblpuV3dqbkFOVmF1MHdJYVBLcWIwYV96Qk9lQkY1YmdDeVJFdDNVMWcwTXV1emItQjZ0al9CTjhDaUxEeGNaVHp0UF9oaTJMRDg0STZZMEFkV09kLUNrbTJ2WmlIcTlBOVp0eTF4alpWOEJpQXVFVmh3RWtGM0poZHdNdkVWLXhnQlpTOU5MRzVVR0QtUlZGZ3ZpMjUwS1A0RVA3Z29SYUVEZnptdkJxc0dFenh4S2c4VnZsMnhJNWZlMlNnTmV4QmtMVmJyald5dHVCaGl4Z3c?oc=5",
+//        "https://news.google.com/rss/articles/CBMijwFBVV95cUxNVUZsX3BYSzNEb3A2VmYyak13TG5HalRxSFhlQm1GWXJQdlJpdFNBVTB1WW4wM3NvZm9KWU5yNDBTM3dJN3VOWXBCZVZseGdlVzZZX2tuMEpkZGlhR0tVNDVpVVo4LTdyczVJZjBTUi1Uc29vTDBKbkhBS3hSQ2d5LW9KZW1TWWFUVnZ5WTNrSQ?oc=5",
+//        "https://news.google.com/rss/articles/CBMiywFBVV95cUxOSmlLWkUzRktONmF6R2ZiTlJ2WlJXaGI2N1lUbkc4S1VnLV9hakdmT1ctT0dyemtnTDJGNlRxd0FmcmpnbFdXZk5nT19WOFRwSHlJMEludm42SGVMRkxlakNINXFjU05OLWVUMmtEWkpHLVh6RDN4RnhXMXliaUVXbFY4T2RDVm5kbXZJd1RKaHFvM2N0cG1hV1ZJeURrUnAyVFdFQXRySzFqLVRJd3g3SWJ2UjRac1BNeEdDQ2JLUDR6MXlHTmdaUjJpRdIB5AFBVV95cUxNTy1rc3lUb001Z0JMaW5jUFAyaFhXNkJjN0xMbXpjN2ZjdEhNZUtFbVVJTTYyLXBaSm5EQWtFTFd6UVgyOU5LZFg3T2VUT1VJM0t0aktZaXFJb0hjUEhUWXdGZHE3Y0Job3hyMFVjU0Z1TWVycGNwMzNCWTJxSXBPeVJhelhWby1mbzFwRkh3QkU0Y3VLRVVUZWFYM1BFZHkzbGZUZV9FX3ZwTXZ4NkFKWmhUaUV5X3E2aTY0MGMxTjBITlZSNE5na1lMckZrNXZ0U2JNdnZNMGg3S2ZjTTdvMUlHa1I?oc=5",
+//        "https://news.google.com/rss/articles/CBMiiwFBVV95cUxPcVZQSmN1eDMydDM2NzNUa3NmQnFfRkhWQWtieGFfOFpjMkl1LVJBRTdHMWJRUDNRWGpicDU0WV9kcnA1cFlDMkRGUkZ1UnI4RXlTazFjUWpZUXZYMmdNdUc1ZmkydDhMZk5tMDZFUFQxQ2h5WG1VYUxlV3VVeUxlMnc2c281UVRYZkR30gGGAUFVX3lxTFBxMU9HQTJnWWdWN3RidzByZ281emhCNVkzRk1vQXFuVWxRMW1kR0VEM0liN0F4S3pFMmlXejg0dXZNbjNvYWVKZzQwb29kN3FxWmlNMzl3SnpUTkNBdXZtSFVVenI2eDRWQWJxalE0YmtSV3hIcnp2RHBmUGVZVnRJeXdYdDdn?oc=5",
+//        "https://news.google.com/rss/articles/CBMijwFBVV95cUxQZk9NZ0JudkgxWDBRY0VJclhfXzY2Q1E2V0JfOEFMT3pBSDkwdWZERHZnajF0Y0lSR3YwN2RQblFUZU96YW4xWHR1SU83MWljNGU0cEdBaTZJLUFhZmJjdEVLVEhOdkEzNV9fWk8zSXlFRHpkUzd4UlotSGRIaVNTRG5VdXIxR0ZudGc3S0FBa9IBkgFBVV95cUxQTWgyREdtLW0yd3hxbkx5UTRGM3R5SkVZajZBRGVyRkNCcUN3Q1Q1TTk3VG5QWUdxby12OW5BLXB2U2UxMWZ4YVAySmg1em1PaGpwZEk0TUVGeTV0NVROVFVJdzFRR00tbVRtcmhubnhPcHZqTW1BVlJyZVVpTEZYN3llX1Y3bllFV0FJVWt2Z2VVUQ?oc=5"
+//    )
+//
+//    for (interval in intervals) {
+//        println("=== interval: $interval ms Started ===")
+//        for (url in rssUrls) {
+//            val response = decoder.decodeGoogleNewsUrl(url, interval)
+//            when (response["status"]) {
+//                true -> {
+//                    val decodedUrl = response["decodedUrl"] as? String
+//                    if (decodedUrl != null) {
+//                        println("Decoded URL: $decodedUrl")
+//                    } else {
+//                        println("Error: Invalid URL format in response: $response")
+//                    }
+//                }
+//                false -> {
+//                    val message = response["message"] as? String ?: "Unknown error"
+//                    println("Error: $message")
+//                    println("=== interval: $interval Fail ===")
+//                    return@runBlocking
+//                }
+//                else -> {
+//                    println("Error: Invalid response format: $response")
+//                    println("=== interval: $interval Fail ===")
+//                    return@runBlocking
+//                }
 //            }
 //        }
-//        false -> {
-//            val message = response["message"] as? String ?: "Unknown error"
-//            println("Error: $message")
-//        }
-//        else -> {
-//            println("Error: Invalid response format: $response")
-//        }
+//        println("=== interval: $interval Success ===")
 //    }
-//    println("=== End Library Test ===")
+//    println("=== End of Multiple Requests ===")
+//}
+//
+//fun main() = runBlocking {
+//    mainSingleRequest()
+//    delay(1000L)
+//    mainMultipleRequests()
 //}
